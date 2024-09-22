@@ -27,12 +27,6 @@ public class EmployeeService {
         this.passwordEncoder = passwordEncoder;
     }
 
-    // パスワード暗号化メソッド
-    private String encryptPassword(String password) {
-        // パスワード暗号化
-        return passwordEncoder.encode(password);
-    }
-
     // 従業員保存
     @Transactional
     public ErrorKinds save(Employee employee) {
@@ -58,6 +52,7 @@ public class EmployeeService {
         return ErrorKinds.SUCCESS;
     }
 
+    // 従業員更新
     @Transactional
     public ErrorKinds update(String code, Employee employee) {
         // 氏名のチェック
@@ -67,13 +62,11 @@ public class EmployeeService {
 
         // パスワードが空白かチェック
         if (employee.getPassword() != null && !employee.getPassword().isEmpty()) {
-            // パスワードチェック
+            // パスワードチェックと暗号化
             ErrorKinds result = employeePasswordCheck(employee);
             if (ErrorKinds.CHECK_OK != result) {
                 return result;
             }
-            // パスワード暗号化
-            employee.setPassword(encryptPassword(employee.getPassword()));
         } else {
             // 空白の場合既存のパスワードを使用
             Employee existingEmployee = findByCode(code);
@@ -130,16 +123,15 @@ public class EmployeeService {
 
         // 従業員パスワードの半角英数字チェック処理
         if (isHalfSizeCheckError(employee)) {
-
             return ErrorKinds.HALFSIZE_ERROR;
         }
 
         // 従業員パスワードの8文字～16文字チェック処理
         if (isOutOfRangePassword(employee)) {
-
             return ErrorKinds.RANGECHECK_ERROR;
         }
 
+        // パスワード暗号化
         employee.setPassword(passwordEncoder.encode(employee.getPassword()));
 
         return ErrorKinds.CHECK_OK;
